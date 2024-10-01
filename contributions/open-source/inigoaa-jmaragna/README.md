@@ -38,7 +38,32 @@ Link: https://github.com/prometheus/prometheus/pull/14958
 ## Done
 ### Finding the task
 ### Understanding the project architecture and source code
+After being assigned the issue by a project maintainer, we decided that the best way to set up the environment and understand the project was by running the tests within the project. We started by running `go test ./...` in the project's root directory. This command will install any required module defined in the `go.mod` file and run all the tests in the project. However we could not install the moduled, receiving the following error.
+==TODO: picture of the error==
+We did not know what was the cause of the error and there was not too much information about it on internet. We try to read the following files to find some information about the error:
+- Makefile
+- go.mod
+- go.sum
+- README.md
+- Contributing.md
+
+We realize that the go version required was specified in the `go.mod` file, but was shocking that two differnt versions were specified `1.22` for go runtime and `1.23` for the toolchain, we realized that the default version provided in Ubuntu by `apt` was older than the required one, so we try to install the latest go version from the official website. After installing the latest version of go, we were able to tun the tests. However, they did not passed. We encountered several issues as not all dependencies were installed, nor were they clearly defined anywhere. To resolve this, we asked for guidance in the project's Slack channel. A maintainer recommended that we install the linter, but this alone was insufficient. We also discovered that we needed to install goyacc.
+
+Once that was done, some tests passed successfully, but we still encountered issues with tests in the ui folder. We realized that these tests were written in JavaScript, while the rest of the project, including our task, was primarily in Go. After reviewing the Makefile, we realized the test instructions allowed us to run only the Go tests. Once we reran the tests using the appropriate command, all of them passed successfully.
+```bash
+make test GO_ONLY=1
+```
+After having our project prepare we decided to focus on our task and deeply understand the code that we must change. As an orphan PR was related to our task we check it to take some inspiration, this helped us to realized which files should we modify, however the code was outdated and a review which suggested many changes, so we decided to note the changes and start from scratch.
 ### Development
+As a team, we discussed how to approach the problem and created small subtasks that each team member could handle independently. Since the issue was related to the configuration of the Prometheus binary, the changes impacted both the main and scraper modules. The main module handles the various flags, while the scraper module is responsible for the logic related to the issue.
+
+At this point, we faced a decision: Should we remove the option entirely and make the new default the only available behavior, or should we retain the option to allow the old behaviour as well? After reviewing previous discussions in Slack and on GitHub, we realized that the maintainers preferred removing the old behaviour.
+
+We divided the work by splitting each module into equal parts, allowing both of us to contribute simultaneously to both modules.
+
+After completing the changes and updating the tests, we ran the tests to ensure that the changes did not break any existing functionality. We also ran the linter to ensure that the code was clean and followed the project's standards. However, both of them failed. The golang test told us that the documentation did not match the code. We updated the documentation manually but there was a way for doing it automatically, after running the command for creating the doc, all tests passed.
+
+The linter failed but give us really descriptive changes so was really easy to solve them, after solving the linter issues we run the tests again and all of them passed. So we made a commit and create the PR, which passed all the CI pipelines.
 ### Final issue
 ### Conclusion
 
